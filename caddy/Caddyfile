@@ -22,3 +22,15 @@ portainer.{$DOMAIN} {
 	# Portainer is on the same docker network, reachable by container name.
 	reverse_proxy portainer:9000
 }
+
+cockpit.{$DOMAIN} {
+	tls internal
+	# Cockpit is a host service on :9090 with its own TLS. Reach it via the
+	# host gateway and skip verifying its self-signed cert. Requires a matching
+	# Origins entry in /etc/cockpit/cockpit.conf (see README).
+	reverse_proxy https://host.docker.internal:9090 {
+		transport http {
+			tls_insecure_skip_verify
+		}
+	}
+}

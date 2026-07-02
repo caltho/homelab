@@ -10,7 +10,12 @@ Samba, and Caddy as a reverse proxy.
 | Home Assistant | host         | http://<host>:8123 · https://ha.home.lan   |
 | Plex           | host         | http://<host>:32400/web · https://plex.home.lan |
 | Samba          | bridge :445  | `\\<host>\Media`                        |
+| Portainer      | bridge :9443 | https://<host>:9443 · https://portainer.home.lan |
 | Caddy          | bridge 80/443| reverse proxy (internal CA by default)  |
+
+Cockpit is **not** part of this compose stack — it's a host service (systemd
+`cockpit.socket` on :9090), reached at https://<host>:9090 or, once configured,
+https://cockpit.home.lan.
 
 ## Layout
 
@@ -45,6 +50,18 @@ data/               # config volumes + media (gitignored, created at runtime)
 - **Plex Quick Sync**: `/dev/dri` is passed through and the container joins the
   `render` group (`RENDER_GID` in `.env`). Enable "Use hardware acceleration
   when available" in Plex → Settings → Transcoder (requires Plex Pass).
+
+- **Cockpit behind Caddy**: the `cockpit.home.lan` vhost proxies to the host's
+  :9090. Cockpit rejects proxied logins unless the origin is allowed — create
+  `/etc/cockpit/cockpit.conf` (root):
+
+  ```ini
+  [WebService]
+  Origins = https://cockpit.home.lan wss://cockpit.home.lan
+  ProtocolHeader = X-Forwarded-Proto
+  ```
+
+  then `sudo systemctl restart cockpit`.
 
 - **Caddy** uses an internal CA by default (self-signed certs for `*.home.lan`).
   Trust its root CA on client devices, or switch to Let's Encrypt — see the
