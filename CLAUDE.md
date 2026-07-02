@@ -47,6 +47,9 @@ data/               # ALL runtime state (GITIGNORED): HA config, Plex, etc.
 - **`data/` is a bind mount = the real state.** Survives reboots automatically
   (`restart: unless-stopped`). HA integrations (e.g. the 3 WiZ bulbs) live in
   `data/homeassistant/config/.storage/core.config_entries`.
+- **The Samsung T5 SSD is mounted at `data/media`** (fstab, UUID `A463-7C51`,
+  exFAT, uid/gid 1000). It holds the Plex media library (~923 GB, near full).
+  This is a separate physical disk from the OS/config NVMe.
 - To rebuild on new hardware: restore `data/` from a backup + `docker compose up -d`.
 
 ## Operational gotchas (important)
@@ -67,22 +70,33 @@ data/               # ALL runtime state (GITIGNORED): HA config, Plex, etc.
 
 ## Backups
 
-- `scripts/backup.sh` tars `~/docker` (incl. `data/` + `.env`) to a timestamped
+- `scripts/backup.sh` tars `~/docker` (config + `.env`) to a timestamped
   `.tar.gz`, keeping the last 7. Runs tar inside a container (image `caddy:2`) so
   it can read root-owned files without host sudo.
+- **Excludes `data/media`** — that's the 923 GB Plex library on the T5; backing
+  it up would blow out the disk. The archive is ~780 MB (mostly Plex metadata).
 - Scheduled nightly at 03:30 via **Callum's user crontab** (`crontab -l`).
-- Destination is `DOCKER_BACKUP_DEST` (currently `~/backups` on the NVMe — same
-  disk as the data, so it does NOT protect against disk failure yet). Intended
-  upgrade: mount the **Samsung T5** SSD (`/dev/sda1`, exFAT, UUID `A463-7C51`)
-  and repoint `DOCKER_BACKUP_DEST` at it. Mounting needs sudo (Callum runs it).
+- Destination `DOCKER_BACKUP_DEST` = `~/backups` on the **NVMe**. Note: this is
+  the same disk as the config data, so it protects against accidental
+  breakage/corruption but NOT NVMe failure. The T5 is full of media and can't
+  serve as the backup target — a proper off-machine target (NAS/cloud) is still
+  a TODO. Media itself is not backed up (typical for a media library).
 
 ## Pending / known TODOs
 
-- Move backups to the Samsung T5 (needs sudo mount + fstab entry).
-- Push this repo to a private GitHub remote (SSH key generated at
-  `~/.ssh/id_ed25519`; awaiting repo creation).
-- Plex first-run: sign in / claim + point a library at the T5 media (the T5 is
-  the intended Plex media disk; wasn't touched yet).
+- **HA media mount mismatch:** `compose.yaml` mounts `/mnt/ssd:/media/ssd:ro`
+  into HA, but the T5 is actually at `data/media` and `/mnt/ssd` is empty/not
+  mounted — so HA sees nothing there. Fix: change that volume to
+  `${DATA_ROOT}/media:/media/ssd:ro`, or remove the line.
+- **Off-machine backup target:** backups are on the NVMe only (no protection vs
+  NVMe failure). Add a NAS/cloud destination.
+- Plex first-run: sign in / claim + create libraries pointing at `data/media`
+  (T5). Media disk is already mounted and full.
 - Cockpit-behind-Caddy needs `/etc/cockpit/cockpit.conf` Origins allow-list
   (see README) — direct `:9090` works regardless.
-- `SAMBA_PASS` was set to a random value in `.env`.
+
+## Done
+
+- Repo pushed to `git@github.com:caltho/homelab.git` (branch `main`).
+- `SAMBA_PASS` set to a random value in `.env`.
+- 3 WiZ bulbs added to HA; nightly backups scheduled.

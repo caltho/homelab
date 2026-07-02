@@ -36,6 +36,7 @@ echo "[$(date -Is)] Backing up $SRC -> $DEST/$OUT"
 	-v "$SRC":/src:ro \
 	-v "$DEST":/backup \
 	"$IMAGE" sh -c "tar czf /backup/'$OUT' -C /src \
+		--exclude='./data/media' \
 		--exclude='./scripts/backup.log' \
 		--exclude='./caddy-root-ca.crt' \
 		--exclude='./data/homeassistant/config/*.log' \
