@@ -1,0 +1,80 @@
+name: homelab
+
+services:
+  # ---------------------------------------------------------------------------
+  # Home Assistant — host network mode (required for device/mDNS discovery)
+  # ---------------------------------------------------------------------------
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: homeassistant
+    network_mode: host
+    privileged: true
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${DATA_ROOT}/homeassistant/config:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Plex — host network mode + Intel Quick Sync (QSV) hardware transcoding.
+  # /dev/dri is the Intel iGPU render node; group_add gives access to it.
+  # ---------------------------------------------------------------------------
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    network_mode: host
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - VERSION=docker
+      - PLEX_CLAIM=${PLEX_CLAIM}
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - "${RENDER_GID}"   # 'render' group — required to use /dev/dri/renderD128
+    volumes:
+      - ${DATA_ROOT}/plex/config:/config
+      - ${DATA_ROOT}/media:/media
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Samba — shares the media directory over SMB so you can drop in files.
+  # ---------------------------------------------------------------------------
+  samba:
+    image: dockurr/samba
+    container_name: samba
+    environment:
+      - NAME=Media
+      - USER=${SAMBA_USER}
+      - PASS=${SAMBA_PASS}
+      - UID=${PUID}
+      - GID=${PGID}
+    ports:
+      - "445:445"
+    volumes:
+      - ${DATA_ROOT}/media:/storage
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Caddy — reverse proxy. Proxies to the host-network services above via the
+  # host gateway. TLS mode is configured in caddy/Caddyfile.
+  # ---------------------------------------------------------------------------
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - DOMAIN=${DOMAIN}
+      - ACME_EMAIL=${ACME_EMAIL}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${DATA_ROOT}/caddy/data:/data
+      - ${DATA_ROOT}/caddy/config:/config
+    restart: unless-stopped

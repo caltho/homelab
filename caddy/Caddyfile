@@ -1,0 +1,18 @@
+# Caddyfile — reverse proxy for the homelab stack.
+#
+# Default: internal CA (self-signed) for LAN hostnames. To trust these certs on
+# your devices, install Caddy's root CA (it's created under data/caddy/data/...).
+#
+# To switch to public Let's Encrypt certs instead: point a real domain at this
+# host, set DOMAIN + ACME_EMAIL in .env, and replace `tls internal` with
+# `tls {$ACME_EMAIL}` (or just delete the tls line to let Caddy auto-negotiate).
+
+ha.{$DOMAIN} {
+	tls internal
+	reverse_proxy host.docker.internal:8123
+}
+
+plex.{$DOMAIN} {
+	tls internal
+	reverse_proxy host.docker.internal:32400
+}
