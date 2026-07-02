@@ -16,3 +16,9 @@ plex.{$DOMAIN} {
 	tls internal
 	reverse_proxy host.docker.internal:32400
 }
+
+portainer.{$DOMAIN} {
+	tls internal
+	# Portainer is on the same docker network, reachable by container name.
+	reverse_proxy portainer:9000
+}

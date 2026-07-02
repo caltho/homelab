@@ -59,6 +59,21 @@ services:
     restart: unless-stopped
 
   # ---------------------------------------------------------------------------
+  # Portainer — Docker management UI. Mounts the docker socket (read-only).
+  # Reachable directly on :9443 (https) or via Caddy at portainer.<DOMAIN>.
+  # ---------------------------------------------------------------------------
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    command: -H unix:///var/run/docker.sock
+    ports:
+      - "9443:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${DATA_ROOT}/portainer:/data
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
   # Caddy — reverse proxy. Proxies to the host-network services above via the
   # host gateway. TLS mode is configured in caddy/Caddyfile.
   # ---------------------------------------------------------------------------
