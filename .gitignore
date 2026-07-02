@@ -6,3 +6,6 @@ data/
 
 # Exported Caddy root CA (generated; copy for trusting on devices)
 caddy-root-ca.crt
+
+# Backup run log
+scripts/backup.log
