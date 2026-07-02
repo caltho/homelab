@@ -3,3 +3,6 @@
 
 # Runtime data / config / media — not source-controlled
 data/
+
+# Exported Caddy root CA (generated; copy for trusting on devices)
+caddy-root-ca.crt
