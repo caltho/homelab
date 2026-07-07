@@ -100,3 +100,10 @@ data/               # ALL runtime state (GITIGNORED): HA config, Plex, etc.
 - Repo pushed to `git@github.com:caltho/homelab.git` (branch `main`).
 - `SAMBA_PASS` set to a random value in `.env`.
 - 3 WiZ bulbs added to HA; nightly backups scheduled.
+- 2 Meross MSS310 plugs added to HA via the `meross_lan` custom integration
+  ("Bathroom Grow Light" @ .103, "Tower Lamp" @ .204). Local LAN control (port
+  80 open on both) with a Meross cloud profile just for the device key.
+  ⚠️ `meross_lan` was installed **manually** into `data/homeassistant/config/
+  custom_components/meross_lan` (HACS's own download failed with a conflict), so
+  **HACS will NOT auto-update it** — to upgrade, replace that folder with a newer
+  release from `github.com/krahabb/meross_lan` and restart HA.

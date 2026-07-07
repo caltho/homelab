@@ -7,5 +7,7 @@ data/
 # Exported Caddy root CA (generated; copy for trusting on devices)
 caddy-root-ca.crt
 
-# Backup run log
+# Backup run logs
 scripts/backup.log
+scripts/restic-backup.log
+scripts/git-backup.log
