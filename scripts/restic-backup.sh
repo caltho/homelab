@@ -36,13 +36,14 @@ if [ ! -f "$PWFILE" ]; then
 fi
 mkdir -p "$MEDIA_MNT/backups"
 
-echo "[$(date -Is)] restic backup start ($SRC -> $REPO_HOST)"
+echo "[$(date -Is)] restic backup start ($SRC + claude-telegram-bridge -> $REPO_HOST)"
 
 "$DOCKER" run --rm \
 	--hostname bongripper \
 	-e RESTIC_REPOSITORY=/backups/restic-repo \
 	-e RESTIC_PASSWORD_FILE=/pw \
 	-v "$SRC":/src:ro \
+	-v /home/callum/claude-telegram-bridge:/bridge:ro \
 	-v "$MEDIA_MNT/backups":/backups \
 	-v "$PWFILE":/pw:ro \
 	--entrypoint /bin/sh \
@@ -50,9 +51,10 @@ echo "[$(date -Is)] restic backup start ($SRC -> $REPO_HOST)"
 		set -e
 		# Initialise the repo on first run (idempotent).
 		restic cat config >/dev/null 2>&1 || restic init
-		restic backup /src \
+		restic backup /src /bridge \
 			--tag nightly \
 			--exclude-caches \
+			--exclude=/bridge/node_modules \
 			--exclude=/src/data/media \
 			--exclude=/src/caddy-root-ca.crt \
 			--exclude=/src/scripts/backup.log \
