@@ -17,6 +17,14 @@ services:
       - /run/dbus:/run/dbus:ro
       - /mnt/ssd:/media/ssd:ro   # Samsung T5 files, appears in HA Media browser (read-only)
     restart: unless-stopped
+    # Detects the "process alive but web server hung" failure mode. The host
+    # watchdog (scripts/ha-watchdog.sh, cron) restarts HA when this goes unhealthy.
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8123/', timeout=5)"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
 
   # ---------------------------------------------------------------------------
   # Plex — host network mode + Intel Quick Sync (QSV) hardware transcoding.
