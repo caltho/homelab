@@ -67,17 +67,35 @@
 - Nightly tarball of `~/docker` → `~/backups` (NVMe).
 - Nightly `git push` of the `~/docker` recipe → GitHub (`caltho/homelab`).
 
-## This bot (GeoffreyBot)
+## This bot (Geoffrey)
 
-- Telegram bot backed by the Claude Agent SDK. Allowlisted to Callum only.
-- Works read-write inside `~/docker` (mounted `/workspace`). It does **not** have
-  the other stacks' files mounted — but it CAN see their containers and logs.
-- A `PreToolUse` veto blocks: writes outside the workspace, `rm -r` on system
-  paths, `git push`, and stopping/killing homeassistant/plex.
+- Telegram bot backed by the Claude Agent SDK. Allowlisted to **two** people:
+  **Callum** (admin) and **Lucy**, who lives here but does not administer anything.
+- **Two personas, one bot** (`USER_PROFILES` in the bridge's `.env`):
+  - Callum → `technical`: terse, shell/paths/logs, live tool-call stream.
+  - Lucy → `friendly`: plain English, never sends commands, code, paths or log
+    output, keeps answers short, invites follow-up questions. Her replies are also
+    stripped of markdown and code blocks in code, not just by instruction.
+  - Both have the **same permissions**; only the voice and the output differ.
+- Writes are allowed in `~/docker` (`/workspace`, the cwd) **and** in
+  `~/media-stack` (`/stacks/media-stack`) and `~/slskd` (`/stacks/slskd`).
+- A `PreToolUse` veto blocks: writes outside those three roots, `rm -r` on a stack
+  root or anything outside them, `git push`, and stopping/killing containers.
 - Docker access is via a least-privilege broker (bot has no socket):
   - `docker-list` — list all containers, any stack.
   - `docker-logs <name> [tail]` — logs for any container.
-  - `restart-service <name>` — restart, allowlist: homeassistant, plex, samba,
-    portainer, caddy (restart only; no stop/kill).
+  - `restart-service <name>` — **restart only**, no stop/kill. Allowlist now covers
+    all four stacks except the bridge and broker themselves: homeassistant, plex,
+    samba, portainer, caddy, sonarr, radarr, prowlarr, overseerr, qbittorrent,
+    media-gluetun, slskd, slskd-bot, gluetun. Run with no argument to print the list.
+- `plex <command>` — direct Plex control via its API (token read from Plex's own
+  `Preferences.xml`): `libraries`, `scan <library|all>` (the fix for "my new film
+  isn't showing up"), `refresh <library>`, `sessions` (who's watching right now),
+  `recent [n]`. Prefer a scan over restarting Plex — it's invisible to viewers.
+- **Home Assistant** has no API token, so the bot cannot read or set live device
+  state. It changes HA by editing `data/homeassistant/config/*.yaml` and then
+  `restart-service homeassistant`. Some files there are root-owned and will refuse
+  to be written (notably anything new in `dashboards/` and `.storage/`).
 - Can push proactive Telegram messages to Callum with `notify <message>` (e.g.
-  progress/completion of background work).
+  progress on background work, or handing over anything that needs root). Errors in
+  Lucy's chat are auto-reported to Callum.
