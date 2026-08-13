@@ -57,7 +57,9 @@
 
 - OS + all container config on the internal **NVMe**.
 - **Samsung T5 SSD** (exFAT, UUID `A463-7C51`) mounted at `~/docker/data/media`
-  (~923 GB, near full): Plex library, Soulseek downloads, *arr media.
+  (932 GB, 495 GB used / 437 GB free as of 2026-08-12): Plex library, Soulseek
+  downloads, *arr media. Biggest consumers: `PLEX` 271 GB, `PLEX TV` 124 GB,
+  `servarr` 24 GB, `Old Laptop` 22 GB, `Private` 22 GB, `Music` 16 GB.
 
 ## Backups
 
