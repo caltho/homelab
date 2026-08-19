@@ -65,6 +65,9 @@ services:
       - "445:445"
     volumes:
       - ${DATA_ROOT}/media:/storage
+      # exFAT-safe config (no xattr/stream metadata). See config/samba/smb.conf
+      # for why the image defaults break macOS Finder copies.
+      - ./config/samba/smb.conf:/etc/samba/smb.conf:ro
     restart: unless-stopped
 
   # ---------------------------------------------------------------------------
