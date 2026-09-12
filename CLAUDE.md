@@ -82,7 +82,43 @@ data/               # ALL runtime state (GITIGNORED): HA config, Plex, etc.
   serve as the backup target — a proper off-machine target (NAS/cloud) is still
   a TODO. Media itself is not backed up (typical for a media library).
 
+## Public website (Cloudflare Tunnel) — IN PROGRESS
+
+Domain: **`naarmsubcritical.com`** (note the spelling: *-critical*, not *-critique*).
+
+Serving a public static site from this box, via a Cloudflare Tunnel rather than a
+router port-forward (no ports opened, home IP stays out of public DNS).
+
+```
+site/                      # static content (index.html placeholder)
+cloudflared/config.yml     # tunnel ingress rules — TRACKED, holds no secrets
+~/.cloudflared/            # cert.pem + <uuid>.json — SECRETS, never in git
+```
+
+- Caddy serves it from the `http://{$SITE_DOMAIN}` vhost (`./site` -> `/srv/site`).
+  That vhost is **http:// on purpose**: Cloudflare terminates public TLS, so Caddy
+  must not try ACME or its internal CA for it.
+- ⚠️ **`SITE_DOMAIN` must never be empty.** An empty value compiles to a bare
+  `http://` block, which Caddy treats as a **catch-all** for every plain-HTTP
+  request, putting it in front of the LAN services. `.env.example` defaults it to
+  the inert `site.invalid` for that reason.
+- ⚠️ The `ingress:` list in `config.yml` ends with a required `http_status:404`
+  catch-all. Only hostnames listed above it are public — do **not** add HA, Plex,
+  Portainer or Cockpit there unless you truly mean to expose them.
+- `cloudflared` is installed at `~/bin/cloudflared` (static binary, no sudo).
+- The `cloudflared` service in `compose.yaml` is **commented out** until the
+  tunnel credentials exist; see the enable steps in the comment above it.
+- Verified working locally: `curl -H "Host: naarmsubcritical.com" http://127.0.0.1/`
+  returns the placeholder page. Test LAN vhosts with `curl --resolve` (hitting a
+  bare IP over HTTPS sends no SNI, so Caddy can't pick a cert and it looks broken
+  when it isn't).
+
 ## Pending / known TODOs
+
+- **Public site is blocked on tunnel creation:** `naarmsubcritical.com` is
+  registered and already delegated to Cloudflare (`mitch`/`teagan.ns.cloudflare.com`).
+  Remaining: `cloudflared tunnel login` (needs a browser), `tunnel create`,
+  `tunnel route dns`, then uncomment the service per `compose.yaml`.
 
 - **HA media mount mismatch:** `compose.yaml` mounts `/mnt/ssd:/media/ssd:ro`
   into HA, but the T5 is actually at `data/media` and `/mnt/ssd` is empty/not

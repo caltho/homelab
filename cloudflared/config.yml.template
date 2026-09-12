@@ -1,0 +1,19 @@
+# Cloudflare Tunnel ingress rules.
+#
+# Copy to config.yml and replace <TUNNEL_UUID> with the id printed by
+#   cloudflared tunnel create bongripper
+# The matching <TUNNEL_UUID>.json credentials file lives in ~/.cloudflared
+# (mounted read-only at /etc/cloudflared/creds). This file holds no secrets.
+
+tunnel: <TUNNEL_UUID>
+credentials-file: /etc/cloudflared/creds/<TUNNEL_UUID>.json
+
+ingress:
+  # Public website -> Caddy's http:// vhost, which serves ./site
+  - hostname: naarmsubcritical.com
+    service: http://caddy:80
+
+  # Everything else is refused. This catch-all is REQUIRED and must be last.
+  # Do not add hostnames for Home Assistant / Plex / Portainer / Cockpit here
+  # unless you deliberately want them on the public internet.
+  - service: http_status:404

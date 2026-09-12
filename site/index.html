@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>It works</title>
+<style>
+  :root {
+    --bg: #fbfbfa; --fg: #1a1a18; --muted: #6b6b66; --line: #e2e2dd; --accent: #b5502a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161614; --fg: #eceae4; --muted: #918d85; --line: #2e2e2a; --accent: #e0805a; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center;
+    background: var(--bg); color: var(--fg); padding: 2rem;
+    font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 34rem; }
+  h1 { font-size: 1.6rem; margin: 0 0 .5rem; letter-spacing: -.02em; }
+  p { color: var(--muted); margin: 0 0 1.5rem; }
+  .dot { display: inline-block; width: .5rem; height: .5rem; border-radius: 50%;
+         background: var(--accent); margin-right: .5rem; vertical-align: middle; }
+  dl { border-top: 1px solid var(--line); margin: 0; padding-top: 1rem;
+       display: grid; grid-template-columns: auto 1fr; gap: .4rem 1.25rem; font-size: .875rem; }
+  dt { color: var(--muted); }
+  dd { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+</style>
+</head>
+<body>
+<main>
+  <h1><span class="dot"></span>It works</h1>
+  <p>Served from a home server in Melbourne, over a Cloudflare Tunnel. Replace this
+     page with real content whenever you like.</p>
+  <dl>
+    <dt>Host</dt><dd>bongripper</dd>
+    <dt>Served by</dt><dd>Caddy</dd>
+    <dt>Ingress</dt><dd>cloudflared</dd>
+    <dt>Files</dt><dd>~/docker/site/</dd>
+  </dl>
+</main>
+</body>
+</html>

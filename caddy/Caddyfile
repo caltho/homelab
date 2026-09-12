@@ -34,3 +34,15 @@ cockpit.{$DOMAIN} {
 		}
 	}
 }
+
+# ---------------------------------------------------------------------------
+# Public static site — reached from the internet via the Cloudflare Tunnel
+# (cloudflared -> caddy:80). Cloudflare terminates public TLS, so this vhost is
+# deliberately http:// only: no ACME, no internal CA, no redirect loop.
+# Content lives in ./site, mounted read-only at /srv/site.
+# ---------------------------------------------------------------------------
+http://{$SITE_DOMAIN} {
+	root * /srv/site
+	file_server
+	encode gzip
+}

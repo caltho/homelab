@@ -11,3 +11,8 @@ caddy-root-ca.crt
 scripts/backup.log
 scripts/restic-backup.log
 scripts/git-backup.log
+
+# Cloudflare Tunnel credentials, if ever copied into the repo (they normally
+# live in ~/.cloudflared). cloudflared/config.yml IS tracked — it holds no secrets.
+cloudflared/*.json
+cloudflared/cert.pem

@@ -100,8 +100,35 @@ services:
     environment:
       - DOMAIN=${DOMAIN}
       - ACME_EMAIL=${ACME_EMAIL}
+      - SITE_DOMAIN=${SITE_DOMAIN}
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./site:/srv/site:ro   # public static site content
       - ${DATA_ROOT}/caddy/data:/data
       - ${DATA_ROOT}/caddy/config:/config
     restart: unless-stopped
+
+  # NOTE: cloudflared is commented out until the tunnel exists. To enable:
+  #   1. (done) naarmsubcritical.com is registered + on Cloudflare nameservers
+  #   2. cloudflared tunnel login && cloudflared tunnel create bongripper
+  #   3. cp cloudflared/config.yml.template cloudflared/config.yml, fill in the UUID
+  #   4. uncomment the block below, then: docker compose up -d
+#  # ---------------------------------------------------------------------------
+#  # cloudflared — Cloudflare Tunnel. Makes an *outbound* connection to Cloudflare
+#  # and serves the public site through it, so no router port-forward is needed
+#  # and the home IP stays out of public DNS.
+#  #
+#  # Ingress rules live in cloudflared/config.yml (tracked in git). The tunnel
+#  # credentials in ~/.cloudflared are secrets and are NOT tracked — recreate them
+#  # with `cloudflared tunnel login && cloudflared tunnel create <name>`.
+#  # ---------------------------------------------------------------------------
+#  cloudflared:
+#    image: cloudflare/cloudflared:latest
+#    container_name: cloudflared
+#    command: tunnel --no-autoupdate --config /etc/cloudflared/config.yml run
+#    volumes:
+#      - ./cloudflared/config.yml:/etc/cloudflared/config.yml:ro
+#      - ${CLOUDFLARED_CREDS}:/etc/cloudflared/creds:ro
+#    depends_on:
+#      - caddy
+#    restart: unless-stopped
