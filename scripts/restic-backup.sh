@@ -2,7 +2,8 @@
 #
 # Encrypted restic backup of the homelab stack to the Samsung T5 SSD.
 #
-# What it backs up: all of ~/docker EXCEPT data/media — i.e. the HA config,
+# What it backs up: ~/claude-telegram-bridge, ~/media-stack and ~/slskd (incl.
+# .env + app config; downloads excluded), plus all of ~/docker EXCEPT data/media — i.e. the HA config,
 # the compose "recipe" (compose.yaml, .env, Caddyfile, scripts, docs) and all
 # container state (which lives as bind mounts under data/: homeassistant,
 # plex/config, portainer, caddy, samba). The 705 GB Plex media library under
@@ -36,7 +37,7 @@ if [ ! -f "$PWFILE" ]; then
 fi
 mkdir -p "$MEDIA_MNT/backups"
 
-echo "[$(date -Is)] restic backup start ($SRC + claude-telegram-bridge -> $REPO_HOST)"
+echo "[$(date -Is)] restic backup start ($SRC + claude-telegram-bridge + media-stack + slskd -> $REPO_HOST)"
 
 "$DOCKER" run --rm \
 	--hostname bongripper \
@@ -44,6 +45,8 @@ echo "[$(date -Is)] restic backup start ($SRC + claude-telegram-bridge -> $REPO_
 	-e RESTIC_PASSWORD_FILE=/pw \
 	-v "$SRC":/src:ro \
 	-v /home/callum/claude-telegram-bridge:/bridge:ro \
+	-v /home/callum/media-stack:/media-stack:ro \
+	-v /home/callum/slskd:/slskd:ro \
 	-v "$MEDIA_MNT/backups":/backups \
 	-v "$PWFILE":/pw:ro \
 	--entrypoint /bin/sh \
@@ -51,10 +54,15 @@ echo "[$(date -Is)] restic backup start ($SRC + claude-telegram-bridge -> $REPO_
 		set -e
 		# Initialise the repo on first run (idempotent).
 		restic cat config >/dev/null 2>&1 || restic init
-		restic backup /src /bridge \
+		restic backup /src /bridge /media-stack /slskd \
 			--tag nightly \
 			--exclude-caches \
 			--exclude=/bridge/node_modules \
+			--exclude=/media-stack/downloads \
+			--exclude="/media-stack/config/*/logs" \
+			--exclude="/media-stack/config/*/MediaCover" \
+			--exclude=/slskd/config/downloads \
+			--exclude=/slskd/config/incomplete \
 			--exclude=/src/data/media \
 			--exclude=/src/caddy-root-ca.crt \
 			--exclude=/src/scripts/backup.log \
